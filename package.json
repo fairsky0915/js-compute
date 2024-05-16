@@ -16,8 +16,11 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@fastly/expressly": "^2.3.0",
     "@fastly/js-compute": "^3.3.0",
-    "fastly": "^5.0.2"
+    "fastly": "^2.2.1",
+    "path-to-regexp": "^6.2.2",
+    "utf8": "^3.0.0"
   },
   "devDependencies": {
     "webpack": "^5.76.2",
