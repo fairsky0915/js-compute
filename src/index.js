@@ -1,26 +1,127 @@
 
 /// <reference types="@fastly/js-compute" />
-import { allowDynamicBackends } from "fastly:experimental";
+
+
+addEventListener("fetch", event => {
+  // Get the request from the client.
+  const req = event.request;
+  const url = new URL(req.url);
+  let path = url.pathname.split("/");
+ 
+  const pathPrefixes = [];
+
+  // Extract all possible prefixes of the URL path
+  while (path.length) {
+    pathPrefixes.push(path.join("/"));
+    path.pop();
+  }
+  console.log(pathPrefixes.join(" "));
+
+  // Join the path prefixes into a valid surrogate key cache override
+  const cacheOverride = new CacheOverride('override', {
+    surrogateKey: pathPrefixes.join(" ")
+  });
+
+  // Send the request to `origin_0`.
+  const backendResponse = fetch(req, {
+    backend: "origin_0",
+    cacheOverride
+  });
+
+  // Send the backend response back to the client.
+  event.respondWith(backendResponse);
+});
+
+/*
+import { Router } from "@fastly/expressly";
+
+const router = new Router();
+
+router.get("/", async (req, res) =>{
+  return res.send("Hello World");
+});
+
+router.listen();
+*/
+
+
+/*
+//import { allowDynamicBackends } from "fastly:experimental";
 import { Backend } from "fastly:backend";
-allowDynamicBackends(true);
-async function app() {
+import { CacheOverride } from "fastly:cache-override";
+
+//allowDynamicBackends(true);
+async function app(event) {
   // For any request, return the fastly homepage -- without defining a backend!
   const backend = new Backend({
-    name: 'fastly',
-    target: 'fastly.com',
-    hostOverride: "www.fastly.com",
+    name: 'http-me',
+    target: 'http-me.glitch.me',
+    hostOverride: "http-me.glitch.me",
     connectTimeout: 1000,
     firstByteTimeout: 15000,
     betweenBytesTimeout: 10000,
     useSSL: true,
     sslMinVersion: 1.3,
     sslMaxVersion: 1.3,
+  });  
+
+  //const backendName = "https://http-me.glitch.me";
+
+//let cacheOverride = new CacheOverride("override", { ttl: 3700, surrogateKey: "abc", swr: 3600});
+const req = event.request;
+const backendResponse = await fetch(clientReq, { backend: "origin_0" });  
+const newBodyStream = backendResponse.blob;
+const httpHeaders = {
+  "X-My-Custom-Header2": "ksong fighting",
+  "X-My-Custom-Header": "Zeke are cool",
+};
+const headers = new Headers(httpHeaders);
+//headers.delete("Cache-Control");
+//headers.set('cache-control','max-age = 360');
+
+
+
+/*if (req.method === "GET") {
+  return new Response(null, {
+    //status: 204,
+    headers: {
+      "access-control-allow-origin": req.headers.get('origin'),
+      "access-control-allow-methods": "GET,HEAD,POST,OPTIONS",
+      "access-control-allow-headers": req.headers.get('access-control-request-headers') || '',
+      "access-control-max-age": 86400,
+    }
   });
-  return fetch('https://www.fastly.com/', {
-    backend // Here we are configuring this request to use the backend from above.
+}*/
+
+//return new Response(null, {
+//  status: 200,
+//  headers
+//});
+
+/*
+const backendResponse = await fetch(req, {
+  //return fetch(event.request, {    
+     //backend: backendName, // Here we are configuring this request to use the backend from above.
+     backend, // Here we are configuring this request to use the backend from above.
+     //cacheOverride
+     headers
   });
+
+return backendResponse;
+
+  /*
+  //return fetch('https://www.fastly.com/', {
+  return fetch('https://http-me.glitch.me', {
+  //return fetch(event.request, {    
+     //backend: backendName, // Here we are configuring this request to use the backend from above.
+     //backend, // Here we are configuring this request to use the backend from above.
+     cacheOverride
+  });  */
+
+/*
 }
 addEventListener("fetch", event => event.respondWith(app(event)));
+
 
 /*
 //! Default Compute@Edge template program.
